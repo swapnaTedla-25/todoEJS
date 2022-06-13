@@ -7,7 +7,6 @@ const app = express();
 
 var isValid = require("date-fns/isValid");
 var format = require("date-fns/format");
-var parseISO = require("date-fns/parseISO");
 
 app.use(express.json());
 
@@ -42,10 +41,49 @@ const covertDbObjToResObj = (dbObj) => {
     dueDate: dbObj.due_date,
   };
 };
-
-const checkIsValid = (request, response, next) => {
+const checkisValidBody = (request, response, next) => {
   const reqBody = request.body;
+
+  if (
+    reqBody.status === "TO DO" ||
+    reqBody.status === "IN PROGRESS" ||
+    reqBody.status === "DONE"
+  ) {
+    if (
+      reqBody.priority === "HIGH" ||
+      reqBody.priority === "MEDIUM" ||
+      reqBody.priority === "LOW"
+    ) {
+      if (
+        reqBody.category === "WORK" ||
+        reqBody.category === "LEARNING" ||
+        reqBody.category === "HOME"
+      ) {
+        if (
+          reqBody.dueDate != undefined &&
+          isValid(new Date(reqBody.dueDate)) === true
+        ) {
+          next();
+        } else {
+          response.status(400);
+          response.send("Invalid Due Date");
+        }
+      } else {
+        response.status(400);
+        response.send("Invalid Todo Category");
+      }
+    } else {
+      response.status(400);
+      response.send("Invalid Todo Priority");
+    }
+  } else {
+    response.status(400);
+    response.send("Invalid Todo Status");
+  }
+};
+const checkIsValid = (request, response, next) => {
   const reqQuery = request.query;
+  const reqBody = request.body;
 
   if (
     reqQuery.status === "TO DO" ||
@@ -74,22 +112,23 @@ const checkIsValid = (request, response, next) => {
     reqBody.category === "HOME"
   ) {
     next();
-  } else if (reqQuery.date != undefined || reqBody.date != undefined) {
-    //var formatDate = format(new Date(reqQuery.date), "yyyy-MM-dd");
-    var formatDate = format(new Date(reqQuery.date), "yyyy-MM-dd");
-
-    if (parseISO(formatDate) != "Invalid Date") {
-      next();
-    }
-    // next();
+  } else if (
+    (reqQuery.date != undefined || reqBody.dueDate != undefined) &&
+    (isValid(new Date(reqQuery.date)) === true ||
+      isValid(new Date(reqBody.dueDate)) === true)
+  ) {
+    //console.log("true");
+    next();
   } else if (reqQuery.search_q != undefined || reqBody.search_q != undefined) {
+    next();
+  } else if (reqBody.todo != undefined) {
     next();
   } else {
     response.status(400);
     let resMessage = "";
-
+    //console.log("invalid else block");
     switch (true) {
-      case reqQuery.status != undefined || reqBody.status != undefined:
+      case reqBody.status != undefined || reqQuery.status != undefined:
         resMessage = "Todo Status";
         break;
       case reqQuery.priority != undefined || reqBody.priority != undefined:
@@ -235,6 +274,7 @@ app.get("/todos/:todoId/", async (request, response) => {
 app.get("/agenda/", checkIsValid, async (request, response) => {
   const { date } = request.query;
   var formatDate = format(new Date(date), "yyyy-MM-dd");
+  //console.log(formatDate);
   const getTodoQuery = `
     SELECT
       *
@@ -242,13 +282,13 @@ app.get("/agenda/", checkIsValid, async (request, response) => {
       todo
     WHERE
       due_date = '${formatDate}';`;
-  const todo1 = await db.get(getTodoQuery);
-
-  response.send(covertDbObjToResObj(todo1));
+  const todoList = await db.all(getTodoQuery);
+  //console.log("todolist", todoList);
+  response.send(todoList.map((eachTodo) => covertDbObjToResObj(eachTodo)));
 });
 
 //4.post todo API
-app.post("/todos/", checkIsValid, async (request, response) => {
+app.post("/todos/", checkisValidBody, async (request, response) => {
   const { id, todo, priority, status, category, dueDate } = request.body;
   const postTodoQuery = `
   INSERT INTO
@@ -295,7 +335,7 @@ app.put("/todos/:todoId/", checkIsValid, async (request, response) => {
     priority = previousTodo.priority,
     status = previousTodo.status,
     category = previousTodo.category,
-    dueDate = previousTodo.dueDate,
+    dueDate = previousTodo.due_date,
   } = request.body;
 
   const updateTodoQuery = `

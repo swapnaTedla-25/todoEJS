@@ -1,4 +1,4 @@
-GET http://localhost:3000/todos/?status=TO%20DO1
+GET http://localhost:3000/todos/?status=TO%20DO
 
 ###
 GET http://localhost:3000/todos/?priority=HIGH
@@ -22,7 +22,7 @@ GET http://localhost:3000/todos/?category=LEARNING&priority=HIGH
 GET http://localhost:3000/todos/1/
 
 ###
-GET http://localhost:3000/agenda/?date=2021-01-13
+GET http://localhost:3000/agenda/?date=2021-02-22
 
 ###
 POST http://localhost:3000/todos/
@@ -34,7 +34,7 @@ Content-Type: application/json
  "priority": "LOW",
  "status": "TO DO",
  "category": "HOME",
- "dueDate": "2021-02-22"
+ "dueDate": "2021-02-02"
 }
 
 ###
@@ -42,19 +42,19 @@ PUT http://localhost:3000/todos/10/
 Content-Type: application/json
 
 {
-"status": "DONE"
+"status": "DONE1"
 }
 
 ###
-PUT http://localhost:3000/todos/7/
+PUT http://localhost:3000/todos/10/
 Content-Type: application/json
 
 {
-"priority": "HIGH"
+"priority": "HIGH1"
 }
 
 ###
-PUT http://localhost:3000/todos/7/
+PUT http://localhost:3000/todos/10/
 Content-Type: application/json
 
 {
@@ -62,7 +62,7 @@ Content-Type: application/json
 }
 
 ###
-PUT http://localhost:3000/todos/7/
+PUT http://localhost:3000/todos/10/
 Content-Type: application/json
 
 {
@@ -70,7 +70,7 @@ Content-Type: application/json
 }
 
 ###
-PUT http://localhost:3000/todos/7/
+PUT http://localhost:3000/todos/10/
 Content-Type: application/json
 
 {
@@ -78,4 +78,4 @@ Content-Type: application/json
 }
 
 ###
-DELETE http://localhost:3000/todos/6/
+DELETE http://localhost:3000/todos/10/
