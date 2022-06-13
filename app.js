@@ -7,7 +7,7 @@ const app = express();
 
 var isValid = require("date-fns/isValid");
 var format = require("date-fns/format");
-var parse = require("date-fns/parse");
+var parseISO = require("date-fns/parseISO");
 
 app.use(express.json());
 
@@ -44,31 +44,64 @@ const covertDbObjToResObj = (dbObj) => {
 };
 
 const checkIsValid = (request, response, next) => {
+  const reqBody = request.body;
+  const reqQuery = request.query;
+
   if (
-    request.query.status === "TO DO" ||
-    request.query.status === "IN PROGRESS" ||
-    request.query.status === "DONE"
+    reqQuery.status === "TO DO" ||
+    reqQuery.status === "IN PROGRESS" ||
+    reqQuery.status === "DONE" ||
+    reqBody.status === "TO DO" ||
+    reqBody.status === "IN PROGRESS" ||
+    reqBody.status === "DONE"
   ) {
     next();
   } else if (
-    request.query.priority === "HIGH" ||
-    request.query.priority === "MEDIUM" ||
-    request.query.priority === "LOW"
+    reqQuery.priority === "HIGH" ||
+    reqQuery.priority === "MEDIUM" ||
+    reqQuery.priority === "LOW" ||
+    reqBody.priority === "HIGH" ||
+    reqBody.priority === "MEDIUM" ||
+    reqBody.priority === "LOW"
   ) {
     next();
   } else if (
-    request.query.category === "WORK" ||
-    request.query.category === "LEARNING" ||
-    request.query.category === "HOME"
+    reqQuery.category === "WORK" ||
+    reqQuery.category === "LEARNING" ||
+    reqQuery.category === "HOME" ||
+    reqBody.category === "WORK" ||
+    reqBody.category === "LEARNING" ||
+    reqBody.category === "HOME"
   ) {
     next();
-  } else if (request.query.date != undefined) {
-    next();
-  } else if (request.query.search_q != undefined) {
+  } else if (reqQuery.date != undefined || reqBody.date != undefined) {
+    //var formatDate = format(new Date(reqQuery.date), "yyyy-MM-dd");
+    var formatDate = format(new Date(reqQuery.date), "yyyy-MM-dd");
+
+    if (parseISO(formatDate) != "Invalid Date") {
+      next();
+    }
+    // next();
+  } else if (reqQuery.search_q != undefined || reqBody.search_q != undefined) {
     next();
   } else {
     response.status(400);
-    response.send(`Invalid Todo `);
+    let resMessage = "";
+
+    switch (true) {
+      case reqQuery.status != undefined || reqBody.status != undefined:
+        resMessage = "Todo Status";
+        break;
+      case reqQuery.priority != undefined || reqBody.priority != undefined:
+        resMessage = "Todo Priority";
+        break;
+      case reqQuery.category != undefined || reqBody.category != undefined:
+        resMessage = "Todo Category";
+        break;
+      default:
+        resMessage = "Due Date";
+    }
+    response.send(`Invalid ${resMessage}`);
   }
 };
 
@@ -215,7 +248,7 @@ app.get("/agenda/", checkIsValid, async (request, response) => {
 });
 
 //4.post todo API
-app.post("/todos/", async (request, response) => {
+app.post("/todos/", checkIsValid, async (request, response) => {
   const { id, todo, priority, status, category, dueDate } = request.body;
   const postTodoQuery = `
   INSERT INTO
@@ -227,7 +260,7 @@ app.post("/todos/", async (request, response) => {
 });
 
 //5.update todo API
-app.put("/todos/:todoId/", async (request, response) => {
+app.put("/todos/:todoId/", checkIsValid, async (request, response) => {
   const { todoId } = request.params;
   let updateColumn = "";
   const requestBody = request.body;
@@ -266,16 +299,16 @@ app.put("/todos/:todoId/", async (request, response) => {
   } = request.body;
 
   const updateTodoQuery = `
-    UPDATE
-      todo
-    SET
-      todo='${todo}',
-      priority='${priority}',
-      status='${status}',
-      category = '${category}',
-      due_date = '${dueDate}'
-    WHERE
-      id = ${todoId};`;
+      UPDATE
+        todo
+      SET
+        todo='${todo}',
+        priority='${priority}',
+        status='${status}',
+        category = '${category}',
+        due_date = '${dueDate}'
+      WHERE
+        id = ${todoId};`;
 
   await db.run(updateTodoQuery);
   response.send(`${updateColumn} Updated`);

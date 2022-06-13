@@ -1,4 +1,4 @@
-GET http://localhost:3000/todos/?status=TO%20DO
+GET http://localhost:3000/todos/?status=TO%20DO1
 
 ###
 GET http://localhost:3000/todos/?priority=HIGH
@@ -13,7 +13,7 @@ GET http://localhost:3000/todos/?search_q=Buy
 GET http://localhost:3000/todos/?category=WORK&status=DONE
 
 ###
-GET http://localhost:3000/todos/?category=HOME
+GET http://localhost:3000/todos/?category=HOME1
 
 ###
 GET http://localhost:3000/todos/?category=LEARNING&priority=HIGH
@@ -22,7 +22,7 @@ GET http://localhost:3000/todos/?category=LEARNING&priority=HIGH
 GET http://localhost:3000/todos/1/
 
 ###
-GET http://localhost:3000/agenda/?date=2021-01-12
+GET http://localhost:3000/agenda/?date=2021-01-13
 
 ###
 POST http://localhost:3000/todos/
@@ -38,7 +38,7 @@ Content-Type: application/json
 }
 
 ###
-PUT http://localhost:3000/todos/7/
+PUT http://localhost:3000/todos/10/
 Content-Type: application/json
 
 {
